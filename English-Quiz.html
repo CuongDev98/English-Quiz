@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>English Quiz</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mu:#6b7280;--bd:#e3e6ee;--pr:#4f46e5;--prt:#fff;--ok:#16a34a;--okb:#e8f7ee;--no:#dc2626;--nob:#fdecec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#181b22;--tx:#eceef4;--mu:#9aa1b2;--bd:#2a2f3a;--pr:#7c83ff;--prt:#0f1115;--ok:#4ade80;--okb:#12301f;--no:#f87171;--nob:#3a1717;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b22;--tx:#eceef4;--mu:#9aa1b2;--bd:#2a2f3a;--pr:#7c83ff;--prt:#0f1115;--ok:#4ade80;--okb:#12301f;--no:#f87171;--nob:#3a1717;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+.w{max-width:640px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{flex:1}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px}
+button,input,textarea,select{font:inherit;color:var(--tx)}
+button{min-height:48px;border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:0 16px;cursor:pointer}
+button.p{background:var(--pr);color:var(--prt);border-color:var(--pr);font-weight:600}
+button.s{min-height:36px;padding:0 12px;font-size:14px}
+button.on{border-color:var(--pr);color:var(--pr);font-weight:600}
+.opt{display:block;width:100%;text-align:left;margin-bottom:10px;padding:12px 14px;min-height:52px}
+.opt.ok{background:var(--okb);border-color:var(--ok)}
+.opt.no{background:var(--nob);border-color:var(--no)}
+.opt:disabled{opacity:1;cursor:default}
+.q{font-size:19px;font-weight:600;margin:12px 0 16px}
+.b{display:inline-block;min-width:64px;border-bottom:2px solid var(--pr);text-align:center;color:var(--pr)}
+.b.f{color:var(--ok);border-color:var(--ok)}
+.bar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pr);transition:width .2s}
+.mu{color:var(--mu);font-size:14px}
+.ex{background:var(--bg);border-left:4px solid var(--pr);border-radius:8px;padding:12px;margin:8px 0 16px;white-space:pre-wrap}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);margin-bottom:8px}
+textarea{min-height:80px;resize:vertical}
+label.k{display:flex;gap:8px;align-items:center;margin:8px 0}
+label.k input{width:auto;margin:0}
+.big{font-size:44px;font-weight:700;text-align:center;margin:8px 0}
+.it{border-top:1px solid var(--bd);padding:10px 0}
+.it:first-child{border-top:0}
+h3{margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="tabs"><button id="t1" onclick="go('home')">Luyện tập</button><button id="t2" onclick="go('bank')">Ngân hàng câu hỏi</button></div>
+  <div id="app"></div>
+</div>
+<script>
+const DEF=[];
+
+let bank=load(),seen=ls('seen2',[]),S=null,view='home',cfg={n:'20',sq:true,so:true,t:0,nr:true};
+function ls(k,d){try{const r=JSON.parse(localStorage.getItem(k));return Array.isArray(r)?r:d}catch(e){return d}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function load(){try{localStorage.removeItem('qb1')}catch(e){}return ls('qb2',DEF)}
+function save(){sv('qb2',bank)}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const blank=(q,fill)=>esc(q).replace(/_{2,}|-{3,}|…+/,fill?`<span class="b f">${esc(fill)}</span>`:'<span class="b">&nbsp;</span>');
+function go(v){view=v;render()}
+
+function render(){
+  if(S&&view!=='quiz')clearInterval(S.tid);
+  $('t1').className=view!=='bank'?'on':'';$('t2').className=view==='bank'?'on':'';
+  if(view==='home')home();else if(view==='quiz')quiz();else if(view==='result')result();else bankView();
+}
+
+function home(){
+  $('app').innerHTML=`<div class="card"><h3>Luyện ngữ pháp</h3>
+  <p class="mu">${bank.length} câu trong ngân hàng · đã học ${bank.filter(x=>seen.includes(x.q)).length}/${bank.length} câu ở vòng này.</p>
+  <div class="row" style="margin-bottom:8px"><span>Số câu</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${['10','20','30','50','all'].map(n=>`<button class="s ${cfg.n===n?'on':''}" onclick="cfg.n='${n}';home()">${n==='all'?'Tất cả':n}</button>`).join('')}</div></div>
+  <div class="row" style="margin-bottom:8px"><span>Hẹn giờ mỗi câu</span><div style="display:flex;gap:6px">${[0,15,30].map(t=>`<button class="s ${cfg.t===t?'on':''}" onclick="cfg.t=${t};home()">${t?t+'s':'Tắt'}</button>`).join('')}</div></div>
+  <label class="k"><input type="checkbox" ${cfg.sq?'checked':''} onchange="cfg.sq=this.checked"> Trộn thứ tự câu</label>
+  <label class="k"><input type="checkbox" ${cfg.so?'checked':''} onchange="cfg.so=this.checked"> Trộn thứ tự đáp án</label>
+  <label class="k"><input type="checkbox" ${cfg.nr?'checked':''} onchange="cfg.nr=this.checked"> Không lặp câu đã học (hết ngân hàng mới reset)</label>
+  <button class="s" onclick="if(confirm('Làm mới vòng học?')){seen=[];sv('seen2',seen);home()}">Làm mới vòng</button>
+  <button class="p" style="width:100%;margin-top:8px" onclick="start()">Bắt đầu</button></div>`;
+}
+
+function start(list){
+  let src=list;
+  if(!list){
+    if(!bank.length){alert('Ngân hàng đang trống. Vào tab Ngân hàng câu hỏi để nhập câu.');return}
+    let pool=bank;
+    if(cfg.nr){const s=new Set(seen);pool=bank.filter(x=>!s.has(x.q));if(!pool.length){seen=[];sv('seen2',seen);pool=bank;alert('Đã học hết ngân hàng. Bắt đầu vòng mới!')}}
+    src=cfg.sq?shuf(pool):pool.slice();
+    if(cfg.n!=='all')src=src.slice(0,+cfg.n);
+  }
+  const qs=src.map(x=>{let o=x.o.map((t,i)=>({t,c:i===x.a}));if(cfg.so)o=shuf(o);return{q:x.q,e:x.e,o,src:x}});
+  S={qs,i:0,score:0,wrong:[],pick:null};view='quiz';render();
+}
+
+function quiz(){
+  const q=S.qs[S.i],ans=S.pick!==null,right=ans&&S.pick>=0&&q.o[S.pick].c,L='ABCDEFGH';
+  const fill=ans?q.o.find(o=>o.c).t:null;
+  $('app').innerHTML=`<div class="card"><div class="row mu"><span>Câu ${S.i+1}/${S.qs.length}</span><span>Đúng: ${S.score}</span>${cfg.t&&!ans?`<span id="tm"><b>${S.left??cfg.t}s</b></span>`:''}</div>
+  <div class="bar" style="margin-top:8px"><i style="width:${(S.i+(ans?1:0))/S.qs.length*100}%"></i></div>
+  <div class="q">${blank(q.q,fill)}</div>
+  ${q.o.map((o,i)=>`<button class="opt ${ans?(o.c?'ok':i===S.pick?'no':''):''}" ${ans?'disabled':''} onclick="pick(${i})"><b>${L[i]}.</b> ${esc(o.t)}</button>`).join('')}
+  ${ans?`<div class="ex"><b>${S.pick<0?'⏱ Hết giờ':right?'✓ Chính xác':'✗ Chưa đúng'}</b> — đáp án: ${esc(fill)}\n${esc(q.e||'(Chưa có giải thích)')}${q.src.t?'\n\nDịch: '+esc(q.src.t):''}</div>
+  <button class="p" style="width:100%" onclick="next()">${S.i+1<S.qs.length?'Câu tiếp theo':'Xem kết quả'}</button>`:''}</div>
+  <button class="s" onclick="go('home')">Thoát</button>`;
+  clearInterval(S.tid);
+  if(cfg.t&&!ans){if(S.left==null)S.left=cfg.t;S.tid=setInterval(()=>{S.left--;const t=$('tm');if(t)t.innerHTML=`<b>${S.left}s</b>`;if(S.left<=0)pick(-1)},1000)}
+}
+function pick(i){clearInterval(S.tid);S.left=null;const q=S.qs[S.i];S.pick=i;if(!seen.includes(q.src.q)){seen.push(q.src.q);sv('seen2',seen)}if(i>=0&&q.o[i].c)S.score++;else S.wrong.push(q);quiz()}
+function next(){S.pick=null;if(S.i+1<S.qs.length){S.i++;quiz()}else go('result')}
+
+function result(){
+  const p=Math.round(S.score/S.qs.length*100);
+  $('app').innerHTML=`<div class="card"><div class="big">${S.score}/${S.qs.length}</div><p class="mu" style="text-align:center">${p}% chính xác</p>
+  <div class="row"><button class="p" style="flex:1" onclick="go('home')">Làm lại</button>
+  ${S.wrong.length?`<button style="flex:1" onclick="start(S.wrong.map(w=>w.src))">Ôn ${S.wrong.length} câu sai</button>`:''}</div></div>
+  ${S.wrong.length?`<div class="card"><h3>Câu làm sai</h3>${S.wrong.map(w=>`<div class="it"><div>${blank(w.q,w.o.find(o=>o.c).t)}</div><div class="mu" style="white-space:pre-wrap;margin-top:4px">${esc(w.e)}${w.src.t?'\n\nDịch: '+esc(w.src.t):''}</div></div>`).join('')}</div>`:''}`;
+}
+
+function bankView(){
+  $('app').innerHTML=`<div class="card"><h3>Thêm câu hỏi</h3>
+  <textarea id="fq" placeholder="Câu hỏi (dùng ____ cho chỗ trống)"></textarea>
+  ${[1,2,3,4].map(i=>`<input id="fo${i}" placeholder="Đáp án ${'ABCD'[i-1]}">`).join('')}
+  <select id="fa"><option value="0">Đáp án đúng: A</option><option value="1">Đáp án đúng: B</option><option value="2">Đáp án đúng: C</option><option value="3">Đáp án đúng: D</option></select>
+  <textarea id="fe" placeholder="Giải thích vì sao chọn đáp án này"></textarea>
+  <textarea id="ft" placeholder="Dịch cả câu sang tiếng Việt"></textarea>
+  <button class="p" style="width:100%" onclick="add()">Thêm</button></div>
+
+  <div class="card"><h3>Nhập hàng loạt</h3>
+  <p class="mu">Mỗi dòng một câu:<br><code>câu hỏi | A | B | C | D | số đáp án đúng | giải thích | dịch</code><br>Ví dụ: <code>She ____ home. | go | goes | going | gone | 2 | Chủ ngữ số ít → goes | Cô ấy về nhà.</code></p>
+  <textarea id="bulk" style="min-height:120px"></textarea>
+  <div class="row"><button class="p" style="flex:1" onclick="bulk()">Nhập</button><button style="flex:1" onclick="exp()">Xuất JSON</button></div>
+  <div id="msg" class="mu" style="margin-top:8px"></div></div>
+
+  <div class="card"><div class="row"><h3>Danh sách (${bank.length})</h3><button class="s" onclick="reset()">Xóa tất cả</button></div>
+  ${bank.map((x,i)=>`<div class="it"><div class="row" style="align-items:flex-start"><div>${esc(x.q)}<div class="mu">${x.o.map((o,j)=>j===x.a?`<b>${esc(o)}</b>`:esc(o)).join(' · ')}</div></div><button class="s" onclick="del(${i})">Xóa</button></div></div>`).join('')}</div>`;
+}
+const msg=t=>{const m=$('msg');if(m)m.textContent=t};
+function add(){
+  const q=$('fq').value.trim(),o=[1,2,3,4].map(i=>$('fo'+i).value.trim()).filter(Boolean),a=+$('fa').value;
+  if(!q||o.length<2||a>=o.length){alert('Cần câu hỏi, ít nhất 2 đáp án, và đáp án đúng phải có nội dung.');return}
+  bank.push({q,o,a,e:$('fe').value.trim(),t:$('ft').value.trim()});save();bankView();
+}
+function bulk(){
+  const lines=$('bulk').value.split('\n').map(l=>l.trim()).filter(Boolean);let ok=0,bad=0;
+  for(const l of lines){
+    const p=l.split('|').map(s=>s.trim());
+    if(p.length<5){bad++;continue}
+    const nw=p.length>=6&&/^[1-8]$/.test(p[p.length-3]);const t=nw?p.pop():'',e=p.pop(),a=+p.pop()-1,q=p.shift(),o=p;
+    if(!q||o.length<2||!(a>=0&&a<o.length)){bad++;continue}
+    if(bank.some(x=>x.q===q))continue;bank.push({q,o,a,e,t});ok++;
+  }
+  save();bankView();msg(`Đã thêm ${ok} câu${bad?`, ${bad} dòng lỗi định dạng`:''}.`);
+}
+function exp(){
+  const t=JSON.stringify(bank,null,1);$('bulk').value=t;
+  try{navigator.clipboard.writeText(t);msg('Đã sao chép JSON vào clipboard.')}catch(e){msg('Đã xuất JSON vào ô trên.')}
+}
+function del(i){if(confirm('Xóa câu này?')){bank.splice(i,1);save();bankView()}}
+function reset(){if(confirm('Xóa toàn bộ ngân hàng?')){bank=[];seen=[];save();sv('seen2',seen);bankView()}}
+render();
+</script>
+</body>
+</html>
