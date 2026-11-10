@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>English Quiz</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mu:#6b7280;--bd:#e3e6ee;--pr:#4f46e5;--prt:#fff;--ok:#16a34a;--okb:#e8f7ee;--no:#dc2626;--nob:#fdecec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b22;--tx:#eceef4;--mu:#9aa1b2;--bd:#2a2f3a;--pr:#7c83ff;--prt:#0f1115;--ok:#4ade80;--okb:#12301f;--no:#f87171;--nob:#3a1717;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+.w{max-width:640px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}.tabs button{flex:1;padding:0 4px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px}
+button,input,textarea,select{font:inherit;color:var(--tx)}
+button{min-height:48px;border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:0 16px;cursor:pointer}
+button.p{background:var(--pr);color:var(--prt);border-color:var(--pr);font-weight:600}
+button.s{min-height:36px;padding:0 12px;font-size:14px}
+button.on{border-color:var(--pr);color:var(--pr);font-weight:600}
+.opt{display:block;width:100%;text-align:left;margin-bottom:10px;padding:12px 14px;min-height:52px}
+.opt.ok{background:var(--okb);border-color:var(--ok)}.opt.no{background:var(--nob);border-color:var(--no)}.opt:disabled{opacity:1;cursor:default}
+.q{font-size:19px;font-weight:600;margin:12px 0 16px}
+.b{display:inline-block;min-width:64px;border-bottom:2px solid var(--pr);text-align:center;color:var(--pr)}.b.f{color:var(--ok);border-color:var(--ok)}
+.bar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pr)}
+.mu{color:var(--mu);font-size:14px}
+.ex{background:var(--bg);border-left:4px solid var(--pr);border-radius:8px;padding:12px;margin:8px 0 16px;white-space:pre-wrap}
+.ps{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:15px;max-height:38vh;overflow:auto}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);margin-bottom:8px}
+textarea{min-height:80px;resize:vertical}
+label.k{display:flex;gap:8px;align-items:center;margin:8px 0}label.k input{width:auto;margin:0}
+.big{font-size:44px;font-weight:700;text-align:center;margin:8px 0}
+.it{border-top:1px solid var(--bd);padding:10px 0}.it:first-child{border-top:0}
+h3{margin:0 0 8px}.tg{width:130px;margin:0;padding:6px 8px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="w"><div class="tabs"><button id="t_home" onclick="go('home')">Luyện tập</button><button id="t_mock" onclick="go('mock')">Thi thử</button><button id="t_stat" onclick="go('stat')">Thống kê</button><button id="t_bank" onclick="go('bank')">Ngân hàng</button></div><div id="app"></div></div>
+<datalist id="tags"><option value="Thì"><option value="Bị động"><option value="Hòa hợp chủ vị"><option value="Đại từ"><option value="Từ loại"><option value="Giới từ"><option value="Liên từ"><option value="Mệnh đề quan hệ"><option value="So sánh"><option value="V-ing / to V"><option value="Điều kiện"><option value="Từ vựng"><option value="Mạo từ"><option value="Lượng từ"><option value="Động từ khuyết thiếu"><option value="Cụm động từ"><option value="Câu gián tiếp"><option value="Part 6"><option value="Part 7"></datalist>
+<script>
+const $=id=>document.getElementById(id),D=864e5,BOX=[1,3,7,14,30];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const ld=(k,d)=>{try{const r=JSON.parse(localStorage.getItem(k));return r&&typeof r==='object'?r:d}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const K=x=>x.q+(x.p?'#'+x.p.slice(0,40):'');
+let bank=ld('qb2',[]),seen=ld('seen2',[]),st=ld('st2',{}),S=null,view='home',cfg={n:'20',t:0,sq:1,so:1,nr:1,tag:''};
+if(!Array.isArray(bank))bank=[];if(!Array.isArray(seen))seen=[];
+const save=()=>{sv('qb2',bank)},saveAll=()=>{save();sv('seen2',seen);sv('st2',st)};
+const blank=(q,f)=>esc(q).replace(/_{2,}|-{3,}|…+/,f?`<span class="b f">${esc(f)}</span>`:'<span class="b">&nbsp;</span>');
+const due=()=>bank.filter(x=>{const r=st[K(x)];return r&&r.b!=null&&r.d<=Date.now()});
+function go(v){clearInterval(S&&S.tid);view=v;render()}
+function render(){
+  ['home','mock','stat','bank'].forEach(v=>$('t_'+v).className=(view===v||(view==='quiz'&&(S.m==='m'?v==='mock':v==='home'))||(view==='result'&&(S.m==='m'?v==='mock':v==='home')))?'on':'');
+  ({home,mock,stat,bank:bankView,quiz,result})[view]();
+}
+/* ---------- Luyện tập ---------- */
+function home(){
+  if(!bank.length){$('app').innerHTML='<div class="card"><h3>Ngân hàng trống</h3><p class="mu">Vào tab “Ngân hàng” để nhập câu hỏi.</p></div>';return}
+  const a=bank.filter(x=>seen.includes(K(x))).length,d=due().length;
+  $('app').innerHTML=`<div class="card"><h3>Luyện tập</h3>
+  <p class="mu">Vòng này: đã gặp ${a}/${bank.length}, còn ${bank.length-a} câu chưa gặp.</p>
+  <div class="bar" style="margin-bottom:12px"><i style="width:${a/bank.length*100}%"></i></div>
+  <div class="row" style="margin-bottom:8px"><span>Số câu</span><div style="display:flex;gap:6px;flex-wrap:wrap">${['10','20','30','50','all'].map(n=>`<button class="s ${cfg.n===n?'on':''}" onclick="cfg.n='${n}';home()">${n==='all'?'Hết vòng':n}</button>`).join('')}</div></div>
+  <div class="row" style="margin-bottom:8px"><span>Hẹn giờ mỗi câu</span><div style="display:flex;gap:6px">${[0,15,30].map(t=>`<button class="s ${cfg.t===t?'on':''}" onclick="cfg.t=${t};home()">${t?t+'s':'Tắt'}</button>`).join('')}</div></div>
+  <label class="k"><input type="checkbox" ${cfg.nr?'checked':''} onchange="cfg.nr=+this.checked"> Không lặp câu đã học (hết vòng mới reset)</label>
+  <label class="k"><input type="checkbox" ${cfg.sq?'checked':''} onchange="cfg.sq=+this.checked"> Trộn thứ tự câu</label>
+  <label class="k"><input type="checkbox" ${cfg.so?'checked':''} onchange="cfg.so=+this.checked"> Trộn thứ tự đáp án</label>
+  <button class="p" style="width:100%;margin-top:8px" onclick="startP()">Bắt đầu</button>
+  <button style="width:100%;margin-top:8px" ${d?'':'disabled'} onclick="start('p',due().slice(0,30))">Ôn câu sai đến hạn (${d})</button>
+  <button class="s" style="margin-top:8px" onclick="newRound()">Làm mới vòng</button></div>`;
+}
+function startP(){
+  let pool=bank;
+  if(cfg.nr){pool=bank.filter(x=>!seen.includes(K(x)));if(!pool.length){seen=[];saveAll();pool=bank}}
+  let src=cfg.sq?shuf(pool):pool.slice();if(cfg.n!=='all')src=src.slice(0,+cfg.n);
+  start('p',src);
+}
+function start(m,src,time){
+  const m2=new Map();src.forEach(x=>{const k=x.p?x.p:Symbol();if(!m2.has(k))m2.set(k,[]);m2.get(k).push(x)});
+  src=[...m2.values()].flat();
+  S={m,qs:src.map(x=>{let o=x.o.map((t,i)=>({t,c:i===x.a}));if(cfg.so||m==='m')o=shuf(o);return{x,o}}),i:0,sc:0,w:[],pk:null,left:null,end:time?Date.now()+time*1000:0};
+  view='quiz';render();
+}
+function quiz(){
+  const q=S.qs[S.i],a=S.pk!==null,ok=a&&S.pk>=0&&q.o[S.pk].c,mock=S.m==='m',x=q.x,L='ABCDEFGH',f=a?q.o.find(o=>o.c).t:null;
+  const tm=mock?Math.max(0,Math.ceil((S.end-Date.now())/1000)):(S.left==null?cfg.t:S.left);
+  const fm=s=>mock?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'s';
+  $('app').innerHTML=`<div class="card"><div class="row mu"><span>Câu ${S.i+1}/${S.qs.length}</span>${mock?'':`<span>Đúng: ${S.sc}</span>`}${(mock||cfg.t)&&!a?`<b id="tm">${fm(tm)}</b>`:''}</div>
+  <div class="bar" style="margin-top:8px"><i style="width:${(S.i+(a?1:0))/S.qs.length*100}%"></i></div>
+  ${x.p?`<div class="ps" style="margin-top:12px">${esc(x.p)}</div>`:''}
+  <div class="q">${blank(x.q,f)}</div>
+  ${q.o.map((o,i)=>`<button class="opt ${a?(o.c?'ok':i===S.pk?'no':''):''}" ${a?'disabled':''} onclick="ans(${i})"><b>${L[i]}.</b> ${esc(o.t)}</button>`).join('')}
+  ${a?`<div class="ex"><b>${S.pk<0?'⏱ Hết giờ':ok?'✓ Chính xác':'✗ Chưa đúng'}</b> — đáp án: ${esc(f)}\n${esc(x.e||'(Chưa có giải thích)')}${x.t?`\n\n📖 Dịch: ${esc(x.t)}`:''}</div><button class="p" style="width:100%" onclick="nxt()">${S.i+1<S.qs.length?'Câu tiếp theo':'Xem kết quả'}</button>`:''}</div>
+  <button class="s" onclick="ask('Thoát bài?',()=>go(S.m==='m'?'mock':'home'))">Thoát</button>`;
+  clearInterval(S.tid);
+  if(!a&&(mock||cfg.t)){
+    if(!mock&&S.left==null)S.left=cfg.t;
+    S.tid=setInterval(()=>{
+      if(mock){if(Date.now()>=S.end){clearInterval(S.tid);S.i=S.qs.length;fin();return}$('tm').textContent=fm(Math.ceil((S.end-Date.now())/1000))}
+      else{S.left--;$('tm').textContent=fm(S.left);if(S.left<=0)ans(-1)}
+    },1000);
+  }
+}
+function rec(x,ok){
+  const k=K(x),r=st[k]||(st[k]={c:0,w:0});
+  if(S.m==='p'&&!seen.includes(k))seen.push(k);
+  if(ok){r.c++;if(r.b!=null){r.b=Math.min(r.b+1,4);r.d=Date.now()+BOX[r.b]*D}}
+  else{r.w++;r.b=0;r.d=Date.now()+D}
+  sv('st2',st);sv('seen2',seen);
+}
+function ans(i){
+  clearInterval(S.tid);S.left=null;const q=S.qs[S.i],ok=i>=0&&q.o[i].c;
+  S.pk=i;rec(q.x,ok);if(ok)S.sc++;else S.w.push(q);
+  if(S.m==='m')nxt();else quiz();
+}
+function nxt(){S.pk=null;S.left=null;S.i++;if(S.i<S.qs.length)quiz();else fin()}
+function fin(){clearInterval(S.tid);view='result';render()}
+function result(){
+  const n=S.qs.length,p=Math.round(S.sc/n*100),mock=S.m==='m',un=n-S.sc-S.w.length;
+  $('app').innerHTML=`<div class="card"><div class="big">${S.sc}/${n}</div><p class="mu" style="text-align:center">${p}% chính xác${un>0?` · ${un} câu chưa làm`:''}</p>
+  ${mock?`<p class="mu" style="text-align:center">Ước lượng thô điểm Reading nếu cả bài thi đạt cùng tỷ lệ này: khoảng ${Math.round(5+p*4.9)}/495. Chỉ để tham khảo, đề thật có độ khó và thang điểm riêng.</p>`:''}
+  <div class="row"><button class="p" style="flex:1" onclick="go('${mock?'mock':'home'}')">Làm lại</button>
+  ${S.w.length?`<button style="flex:1" onclick="start('p',S.w.map(w=>w.x))">Ôn ${S.w.length} câu sai</button>`:''}</div></div>
+  ${S.w.length?`<div class="card"><h3>Câu làm sai</h3>${S.w.map(w=>`<div class="it"><div>${blank(w.x.q,w.o.find(o=>o.c).t)}</div><div class="mu" style="white-space:pre-wrap;margin-top:4px">${esc(w.x.e)}${w.x.t?'\n📖 '+esc(w.x.t):''}</div></div>`).join('')}</div>`:''}`;
+}
+/* ---------- Thi thử ---------- */
+function mock(){
+  const pool=bank.filter(x=>!x.p);
+  $('app').innerHTML=`<div class="card"><h3>Thi thử Part 5</h3><p class="mu">30 câu trong 12 phút (khoảng 24 giây mỗi câu, sát đề thật). Không hiện đáp án trong lúc làm, xem giải thích khi nộp bài. Hết giờ tự nộp.</p>
+  <button class="p" style="width:100%" ${pool.length>=10?'':'disabled'} onclick="start('m',shuf(bank.filter(x=>!x.p)).slice(0,30),720)">Bắt đầu thi (${Math.min(30,pool.length)} câu)</button>
+  ${pool.length<10?'<p class="mu">Cần ít nhất 10 câu Part 5 trong ngân hàng.</p>':''}</div>`;
+}
+/* ---------- Thống kê ---------- */
+function stat(){
+  const T={};let C=0,W=0;
+  bank.forEach(x=>{const g=x.g||'Chưa gắn thẻ',r=st[K(x)]||{c:0,w:0},t=T[g]||(T[g]={c:0,w:0,n:0,items:[]});t.c+=r.c;t.w+=r.w;t.n++;t.items.push(x);C+=r.c;W+=r.w});
+  const rows=Object.entries(T).map(([g,t])=>({g,...t,tot:t.c+t.w,pc:t.c+t.w?t.c/(t.c+t.w):null}));
+  const weak=rows.filter(r=>r.tot>=5&&r.g!=='Chưa gắn thẻ').sort((a,b)=>a.pc-b.pc)[0],d=due().length;
+  window._T=T;
+  $('app').innerHTML=`<div class="card"><h3>Tổng quan</h3><p>Đã trả lời <b>${C+W}</b> lượt, đúng <b>${C+W?Math.round(C/(C+W)*100):0}%</b>. Câu sai đến hạn ôn: <b>${d}</b>.</p>
+  ${d?`<button class="p" style="width:100%" onclick="start('p',due().slice(0,30))">Ôn câu đến hạn (${d})</button>`:''}
+  ${weak?`<button style="width:100%;margin-top:8px" onclick="tagPrac('${esc(weak.g).replace(/'/g,"\\'")}')">Luyện dạng yếu nhất: ${esc(weak.g)} (${Math.round(weak.pc*100)}%)</button>`:'<p class="mu">Gắn thẻ dạng câu và trả lời từ 5 lượt trở lên để app gợi ý dạng yếu nhất.</p>'}</div>
+  <div class="card"><h3>Theo dạng câu</h3>${rows.sort((a,b)=>(a.pc??2)-(b.pc??2)).map(r=>`<div class="it"><div class="row"><span>${esc(r.g)} <span class="mu">(${r.n} câu)</span></span><span>${r.pc==null?'chưa làm':Math.round(r.pc*100)+'%'}</span></div>
+  <div class="bar" style="margin:6px 0"><i style="width:${(r.pc||0)*100}%"></i></div><button class="s" onclick="tagPrac(this.dataset.g)" data-g="${esc(r.g)}">Luyện dạng này</button></div>`).join('')||'<p class="mu">Chưa có dữ liệu.</p>'}</div>`;
+}
+function tagPrac(g){const t=(window._T||{})[g];if(t)start('p',shuf(t.items).slice(0,20))}
+/* ---------- Ngân hàng ---------- */
+function parseLine(l){
+  const p=l.split('|').map(s=>s.trim()),i=p.findIndex((s,k)=>k>=3&&/^[1-8]$/.test(s));
+  if(i<0||p.length<i+2)return null;
+  const o=p.slice(1,i),a=+p[i]-1,nl=s=>(s||'').replace(/\\n/g,'\n');
+  if(!p[0]||o.length<2||a>=o.length)return null;
+  return{q:p[0],o,a,e:nl(p[i+1]),t:nl(p[i+2]),g:p[i+3]||'',p:nl(p[i+4])};
+}
+function bankView(){
+  $('app').innerHTML=`<div class="card"><h3>Nhập hàng loạt</h3>
+  <p class="mu">Mỗi dòng một câu:<br><code>câu hỏi | A | B | C | D | số đáp án đúng | giải thích | dịch | dạng câu | đoạn văn</code><br>Ba cột cuối không bắt buộc. Dùng <code>\\n</code> để xuống dòng. Các câu cùng một đoạn văn (Part 6, 7) chỉ cần lặp lại đúng đoạn văn đó ở cột cuối.</p>
+  <textarea id="bulk" style="min-height:110px"></textarea>
+  <input type="file" id="fb" accept=".txt" onchange="rf(this,'bulk')">
+  <button class="p" style="width:100%" onclick="bulk()">Nhập</button><div id="msg" class="mu" style="margin-top:8px"></div></div>
+  <div class="card"><h3>Sao lưu và khôi phục</h3><p class="mu">Gồm ngân hàng, câu đã học và lịch ôn câu sai. Nên sao lưu trước khi xóa cache hoặc đổi máy.</p>
+  <div class="row"><button class="p" style="flex:1" onclick="bk()">Tải file sao lưu</button><button style="flex:1" onclick="bkc()">Sao chép JSON</button></div>
+  <textarea id="rs" placeholder="Dán JSON sao lưu vào đây, hoặc chọn file bên dưới" style="margin-top:8px"></textarea>
+  <input type="file" id="fr" accept=".json,.txt" onchange="rf(this,'rs')"><button style="width:100%" onclick="rstr()">Khôi phục (thay toàn bộ dữ liệu)</button></div>
+  <div class="card"><h3>Thêm một câu</h3>
+  <textarea id="fq" placeholder="Câu hỏi (dùng ____ cho chỗ trống)"></textarea>
+  ${[1,2,3,4].map(i=>`<input id="fo${i}" placeholder="Đáp án ${'ABCD'[i-1]}">`).join('')}
+  <select id="fa">${[0,1,2,3].map(i=>`<option value="${i}">Đáp án đúng: ${'ABCD'[i]}</option>`).join('')}</select>
+  <textarea id="fe" placeholder="Giải thích"></textarea><textarea id="ft" placeholder="Dịch tiếng Việt"></textarea>
+  <input id="fg" list="tags" placeholder="Dạng câu (tùy chọn)"><textarea id="fp" placeholder="Đoạn văn Part 6, 7 (tùy chọn)"></textarea>
+  <button class="p" style="width:100%" onclick="add()">Thêm</button></div>
+  <div class="card"><div class="row"><h3>Danh sách (${bank.length})</h3><button class="s" onclick="ask('Xóa toàn bộ ngân hàng, tiến độ và lịch ôn?',()=>{bank=[];seen=[];st={};saveAll();bankView()})">Xóa toàn bộ</button></div>
+  <p class="mu">Gõ dạng câu vào ô bên phải mỗi câu. Dạng câu chỉ dùng để thống kê, không hiện lúc luyện tập.</p>
+  ${bank.map((x,i)=>`<div class="it"><div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div style="flex:1;min-width:0">${esc(x.q)}${x.p?' <span class="mu">[có đoạn văn]</span>':''}<div class="mu">${x.o.map((o,j)=>j===x.a?`<b>${esc(o)}</b>`:esc(o)).join(' · ')}</div></div>
+  <div style="display:flex;flex-direction:column;gap:6px"><input class="tg" list="tags" placeholder="Dạng" value="${esc(x.g||'')}" onchange="bank[${i}].g=this.value.trim();save()"><button class="s" onclick="del(${i})">Xóa</button></div></div></div>`).join('')}</div>`;
+}
+const msg=t=>{const m=$('msg');if(m)m.textContent=t};
+function rf(el,id){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$(id).value=r.result};r.readAsText(f)}
+function bulk(){
+  let ok=0,bad=0,dup=0;
+  $('bulk').value.split('\n').map(l=>l.trim()).filter(l=>l&&l[0]!=='#').forEach(l=>{
+    const x=parseLine(l);if(!x){bad++;return}
+    if(bank.some(b=>K(b)===K(x))){dup++;return}
+    bank.push(x);ok++;
+  });
+  save();bankView();msg(`Đã thêm ${ok} câu${bad?`, ${bad} dòng lỗi định dạng`:''}${dup?`, ${dup} câu trùng bị bỏ qua`:''}.`);
+}
+function add(){
+  const o=[1,2,3,4].map(i=>$('fo'+i).value.trim()).filter(Boolean),a=+$('fa').value,q=$('fq').value.trim();
+  if(!q||o.length<2||a>=o.length){alert('Cần câu hỏi, ít nhất 2 đáp án, và đáp án đúng phải có nội dung.');return}
+  bank.push({q,o,a,e:$('fe').value.trim(),t:$('ft').value.trim(),g:$('fg').value.trim(),p:$('fp').value.trim()});save();bankView();
+}
+const snap=()=>JSON.stringify({v:1,bank,seen,st});
+function bk(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([snap()],{type:'application/json'}));a.download='english-quiz-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();msg('Đã tạo file sao lưu. Nếu không tải được, dùng nút Sao chép JSON.')}
+function bkc(){try{navigator.clipboard.writeText(snap());msg('Đã sao chép JSON. Dán vào ghi chú hoặc tin nhắn để lưu.')}catch(e){$('rs').value=snap();msg('Không sao chép được, JSON đã hiện ở ô bên dưới.')}}
+function rstr(){
+  let d;try{d=JSON.parse($('rs').value);if(!Array.isArray(d.bank))throw 0}catch(e){msg('JSON không hợp lệ.');return}
+  ask('Thay toàn bộ dữ liệu hiện tại bằng bản sao lưu?',()=>{bank=d.bank;seen=Array.isArray(d.seen)?d.seen:[];st=d.st&&typeof d.st==='object'?d.st:{};saveAll();bankView();msg(`Đã khôi phục ${bank.length} câu.`)});
+}
+function del(i){ask('Xóa câu này?',()=>{bank.splice(i,1);save();bankView()})}
+function newRound(){ask('Bắt đầu vòng mới? Mọi câu sẽ tính là chưa gặp.',()=>{seen=[];saveAll();home()})}
+function ask(m,fn){
+  const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:99';
+  o.innerHTML=`<div class="card" style="max-width:360px;width:100%;margin:0"><p style="margin:0 0 16px">${esc(m)}</p><div class="row"><button style="flex:1" id="aN">Hủy</button><button class="p" style="flex:1" id="aY">Đồng ý</button></div></div>`;
+  document.body.appendChild(o);
+  o.querySelector('#aN').onclick=()=>o.remove();
+  o.querySelector('#aY').onclick=()=>{o.remove();fn()};
+}
+render();
+</script>
+</body>
+</html>
